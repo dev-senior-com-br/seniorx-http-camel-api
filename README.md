@@ -1,1 +1,1 @@
-# seniorx-rest-camel-api
+# seniorx-http-camel-api

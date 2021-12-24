@@ -1,0 +1,198 @@
+package br.com.senior.seniorx.http.camel.authentication;
+
+import static br.com.senior.seniorx.http.camel.authentication.LoginInput.LOGIN_INPUT_FORMAT;
+import static br.com.senior.seniorx.http.camel.authentication.LoginWithKeyInput.LOGIN_WITH_KEY_INPUT_FORMAT;
+import static br.com.senior.seniorx.http.camel.authentication.RefreshTokenInput.REFRESH_TOKEN_INPUT_FORMAT;
+import static org.ehcache.config.builders.CacheConfigurationBuilder.newCacheConfigurationBuilder;
+import static org.ehcache.config.builders.CacheManagerBuilder.newCacheManagerBuilder;
+import static org.ehcache.config.builders.ExpiryPolicyBuilder.timeToLiveExpiration;
+
+import java.time.Duration;
+
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
+import org.apache.camel.builder.RouteBuilder;
+import org.ehcache.Cache;
+import org.ehcache.CacheManager;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import br.com.senior.seniorx.http.camel.SeniorXHTTPRouteBuilder;
+
+public class AuthenticationAPI {
+
+    private static final String PLATFORM = "platform";
+    private static final String AUTHENTICATION = "authentication";
+    private static final String ACTION = "action";
+
+    private static final String AUTHENTICATE = "authenticate";
+    private static final String HEADERS_LOG = "${in.headers}";
+
+    private static final String DIRECT_LOGIN = "direct:authentication-login";
+    private static final String DIRECT_LOGIN_WITH_KEY = "direct:authentication-login-with-key";
+    private static final String DIRECT_REFRESH_TOKEN = "direct:authentication-refresh-token";
+    private static final String TOKEN_CACHE_KEY = "token-cache-key";
+    private static final String TOKEN = "token";
+
+    private static final CacheManager CACHE_MANAGER = newCacheManagerBuilder().build(true);
+
+    private static final Cache<String, Token> TOKEN_CACHE = CACHE_MANAGER.createCache("tokenCache", //
+            newCacheConfigurationBuilder(String.class, Token.class, //
+                    ResourcePoolsBuilder.heap(100000)) //
+            .withExpiry(timeToLiveExpiration(Duration.ofSeconds(604800))) //
+            .build());
+
+    private final RouteBuilder builder;
+
+    public AuthenticationAPI(RouteBuilder builder) {
+        this.builder = builder;
+    }
+
+    public void authenticate(String from, Processor enrichWithToken, String to) {
+        login();
+
+        loginWithKey();
+
+        refreshToken();
+
+        builder //
+        .from(from) //
+        .routeId(AUTHENTICATE) //
+        .to("log:authenticate") //
+        .log(HEADERS_LOG) //
+
+        .process(this::searchToken) //
+
+        .choice() // 1
+        .when(builder.method(this, "tokenNotFound")) //
+
+        .choice() // 2
+        .when(builder.method(this, "isUserLogin")) //
+
+        .to(DIRECT_LOGIN) //
+
+        .otherwise() //
+
+        .to(DIRECT_LOGIN_WITH_KEY) //
+
+        .endChoice() // 2
+
+        .process(this::unmarshallToken) //
+
+        .endChoice() // 1
+
+        .process(enrichWithToken) //
+        .to(to) //
+        ;
+    }
+
+    public static void addAuthorization(Exchange exchange) {
+        Token token = (Token) exchange.getProperty(TOKEN);
+        exchange.getMessage().setHeader("Authorization", "Bearer " + token.accessToken);
+    }
+
+    private void login() {
+        SeniorXHTTPRouteBuilder login = new SeniorXHTTPRouteBuilder(builder);
+        login //
+        .domain(PLATFORM) //
+        .service(AUTHENTICATION) //
+        .primitiveType(ACTION) // .
+        .primitive("login");
+
+        builder //
+        .from(DIRECT_LOGIN) //
+        .routeId("login") //
+        .marshal(LOGIN_INPUT_FORMAT) //
+        .dynamicRouter(login.route()) //
+        ;
+    }
+
+    private void loginWithKey() {
+        SeniorXHTTPRouteBuilder loginWithKey = new SeniorXHTTPRouteBuilder(builder);
+        loginWithKey //
+        .domain(PLATFORM) //
+        .service(AUTHENTICATION) //
+        .primitiveType(ACTION) //
+        .primitive("loginWithKey") //
+        .anonymous(true);
+
+        builder //
+        .from(DIRECT_LOGIN_WITH_KEY) //
+        .routeId("loginWithKey") //
+        .marshal(LOGIN_WITH_KEY_INPUT_FORMAT) //
+        .dynamicRouter(loginWithKey.route()) //
+        ;
+    }
+
+    private void refreshToken() {
+        SeniorXHTTPRouteBuilder refreshToken = new SeniorXHTTPRouteBuilder(builder);
+        refreshToken //
+        .domain(PLATFORM) //
+        .service(AUTHENTICATION) //
+        .primitiveType(ACTION) // .
+        .primitive("refreshToken");
+
+        builder //
+        .from(DIRECT_REFRESH_TOKEN) //
+        .routeId("refreshToken") //
+        .process(this::prepareRefreshToken) //
+        .marshal(REFRESH_TOKEN_INPUT_FORMAT) //
+        .dynamicRouter(refreshToken.route()) //
+        ;
+    }
+
+    private void searchToken(Exchange exchange) {
+        String key = null;
+        Token token = null;
+        Object body = exchange.getMessage().getBody();
+        if (body instanceof LoginInput) {
+            LoginInput loginInput = (LoginInput) body;
+            key = "user:" + loginInput.username + '$' + loginInput.password;
+        } else if (body instanceof LoginWithKeyInput) {
+            LoginWithKeyInput loginWithKeyInput = (LoginWithKeyInput) body;
+            key = "app:" + loginWithKeyInput.accessKey + '$' + loginWithKeyInput.secret + '@' + loginWithKeyInput.tenantName;
+        } else {
+            throw new IntegrationAuthenticationException("Unknown login payload: " + body.getClass().getName());
+        }
+        exchange.setProperty(TOKEN_CACHE_KEY, key);
+        token = TOKEN_CACHE.get(key);
+        if (token != null) {
+            exchange.getMessage().setBody(token);
+        }
+    }
+
+    public boolean tokenNotFound(Object body) {
+        return !(body instanceof Token);
+    }
+
+    public boolean isUserLogin(Object body) {
+        return body instanceof LoginInput;
+    }
+
+    private void unmarshallToken(Exchange exchange) {
+        LoginOutput output = (LoginOutput) exchange.getMessage().getBody();
+        if (output.jsonToken == null) {
+            throw new IntegrationAuthenticationException(output.reason + ": " + output.message);
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Token token = mapper.readValue(output.jsonToken, Token.class);
+            TOKEN_CACHE.put(exchange.getProperty(TOKEN_CACHE_KEY).toString(), token);
+            exchange.setProperty(TOKEN, token);
+            exchange.getMessage().setBody(token);
+            addAuthorization(exchange);
+        } catch (JsonProcessingException e) {
+            throw new IntegrationAuthenticationException(e);
+        }
+    }
+
+    private void prepareRefreshToken(Exchange exchange) {
+        RefreshTokenInput input = new RefreshTokenInput();
+        Token token = (Token) exchange.getProperty(TOKEN);
+        input.refreshToken = token.refreshToken;
+        exchange.getMessage().setBody(input);
+    }
+
+}
