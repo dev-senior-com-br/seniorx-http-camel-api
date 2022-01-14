@@ -16,13 +16,13 @@ public class Token {
 
     public static final JacksonDataFormat TOKEN_FORMAT = new JacksonDataFormat(Token.class);
 
-    @JsonProperty("username")
-    public String userName;
     @JsonProperty("access_token")
     public String accessToken;
     @JsonProperty("refresh_token")
     public String refreshToken;
     @JsonProperty("expires_in")
     public Long expiresIn;
+    @JsonProperty("expire_time")
+    public Long expireTime;
 
 }

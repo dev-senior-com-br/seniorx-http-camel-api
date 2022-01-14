@@ -6,8 +6,10 @@ import static br.com.senior.seniorx.http.camel.authentication.RefreshTokenInput.
 import static org.ehcache.config.builders.CacheConfigurationBuilder.newCacheConfigurationBuilder;
 import static org.ehcache.config.builders.CacheManagerBuilder.newCacheManagerBuilder;
 import static org.ehcache.config.builders.ExpiryPolicyBuilder.timeToLiveExpiration;
+import static org.ehcache.config.units.MemoryUnit.B;
 
 import java.time.Duration;
+import java.util.Date;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -36,12 +38,20 @@ public class AuthenticationAPI {
     private static final String TOKEN_CACHE_KEY = "token-cache-key";
     private static final String TOKEN = "token";
 
+    private static final String TOKEN_CACHE_NAME = "tokenCache";
+    // Token cache size in bytes.
+    private static final long TOKEN_CACHE_SIZE = 64000000;
+    // Refresh token TTL in seconds (See environment variable KONG_REFRESH_TOKEN_TTL at https://git.senior.com.br/arquitetura/kong-rest-client/-/wikis/home).
+    private static final int REFRESH_TOKEN_TTL = 15552000;
+    // Token expiration time margin in seconds.
+    private static final int TOKEN_EXPIRATION_MARGIN = 60;
+
     private static final CacheManager CACHE_MANAGER = newCacheManagerBuilder().build(true);
 
-    private static final Cache<String, Token> TOKEN_CACHE = CACHE_MANAGER.createCache("tokenCache", //
+    private static final Cache<String, Token> TOKEN_CACHE = CACHE_MANAGER.createCache(TOKEN_CACHE_NAME, //
             newCacheConfigurationBuilder(String.class, Token.class, //
-                    ResourcePoolsBuilder.heap(100000)) //
-            .withExpiry(timeToLiveExpiration(Duration.ofSeconds(604800))) //
+                    ResourcePoolsBuilder.newResourcePoolsBuilder().heap(TOKEN_CACHE_SIZE, B).build()) //
+            .withExpiry(timeToLiveExpiration(Duration.ofSeconds(REFRESH_TOKEN_TTL))) //
             .build());
 
     private final RouteBuilder builder;
@@ -65,23 +75,34 @@ public class AuthenticationAPI {
 
         .process(this::searchToken) //
 
-        .choice() // 1
-        .when(builder.method(this, "tokenNotFound")) //
+        .choice() // Token found
+        .when(builder.method(this, "tokenFound")) //
 
-        .choice() // 2
+        .choice() // Expired token
+        .when(builder.method(this, "isExpiredToken")) //
+
+        .to(DIRECT_REFRESH_TOKEN) //
+
+        .process(this::unmarshallToken) //
+
+        .endChoice() // Expired token
+
+        .otherwise() // Token not found
+
+        .choice() // User login
         .when(builder.method(this, "isUserLogin")) //
 
         .to(DIRECT_LOGIN) //
 
-        .otherwise() //
+        .otherwise() // Application login
 
         .to(DIRECT_LOGIN_WITH_KEY) //
 
-        .endChoice() // 2
+        .endChoice() // User login
 
         .process(this::unmarshallToken) //
 
-        .endChoice() // 1
+        .endChoice() // Token found
 
         .process(enrichWithToken) //
         .to(to) //
@@ -152,9 +173,9 @@ public class AuthenticationAPI {
             key = "user:" + loginInput.username + '$' + loginInput.password;
         } else if (body instanceof LoginWithKeyInput) {
             LoginWithKeyInput loginWithKeyInput = (LoginWithKeyInput) body;
-            key = "app:" + loginWithKeyInput.accessKey + '$' + loginWithKeyInput.secret + '@' + loginWithKeyInput.tenantName;
+            key = "app:" + loginWithKeyInput.accessKey + '@' + loginWithKeyInput.tenantName + '$' + loginWithKeyInput.secret;
         } else {
-            throw new IntegrationAuthenticationException("Unknown login payload: " + body.getClass().getName());
+            throw new AuthenticationException("Unknown login payload: " + body.getClass().getName());
         }
         exchange.setProperty(TOKEN_CACHE_KEY, key);
         token = TOKEN_CACHE.get(key);
@@ -163,8 +184,13 @@ public class AuthenticationAPI {
         }
     }
 
-    public boolean tokenNotFound(Object body) {
-        return !(body instanceof Token);
+    public boolean tokenFound(Object body) {
+        return body instanceof Token;
+    }
+
+    public boolean isExpiredToken(Object body) {
+        Token token = (Token) body;
+        return now() >= token.expireTime;
     }
 
     public boolean isUserLogin(Object body) {
@@ -174,18 +200,23 @@ public class AuthenticationAPI {
     private void unmarshallToken(Exchange exchange) {
         LoginOutput output = (LoginOutput) exchange.getMessage().getBody();
         if (output.jsonToken == null) {
-            throw new IntegrationAuthenticationException(output.reason + ": " + output.message);
+            throw new AuthenticationException(output.reason + ": " + output.message);
         }
         ObjectMapper mapper = new ObjectMapper();
         try {
             Token token = mapper.readValue(output.jsonToken, Token.class);
+            token.expireTime = now() + ((token.expiresIn - TOKEN_EXPIRATION_MARGIN) * 1000);
             TOKEN_CACHE.put(exchange.getProperty(TOKEN_CACHE_KEY).toString(), token);
             exchange.setProperty(TOKEN, token);
             exchange.getMessage().setBody(token);
             addAuthorization(exchange);
         } catch (JsonProcessingException e) {
-            throw new IntegrationAuthenticationException(e);
+            throw new AuthenticationException(e);
         }
+    }
+
+    private long now() {
+        return new Date().getTime();
     }
 
     private void prepareRefreshToken(Exchange exchange) {
