@@ -98,11 +98,11 @@ public class AuthenticationAPI {
 
         .to(DIRECT_LOGIN_WITH_KEY) //
 
-        .endChoice() // User login
+        .end() // User login
 
         .process(this::unmarshallToken) //
 
-        .endChoice() // Token found
+        .end() // Token found
 
         .process(enrichWithToken) //
         .to(to) //
