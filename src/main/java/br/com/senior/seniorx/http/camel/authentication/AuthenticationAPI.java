@@ -83,6 +83,8 @@ public class AuthenticationAPI {
 
         .to(DIRECT_REFRESH_TOKEN) //
 
+        .to("log:refreshedToken") //
+        .log(HEADERS_LOG) //
         .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
@@ -101,6 +103,8 @@ public class AuthenticationAPI {
 
         .end() // User login
 
+        .to("log:authenticated") //
+        .log(HEADERS_LOG) //
         .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
