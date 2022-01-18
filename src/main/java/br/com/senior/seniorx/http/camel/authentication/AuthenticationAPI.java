@@ -3,6 +3,7 @@ package br.com.senior.seniorx.http.camel.authentication;
 import static br.com.senior.seniorx.http.camel.authentication.LoginInput.LOGIN_INPUT_FORMAT;
 import static br.com.senior.seniorx.http.camel.authentication.LoginWithKeyInput.LOGIN_WITH_KEY_INPUT_FORMAT;
 import static br.com.senior.seniorx.http.camel.authentication.RefreshTokenInput.REFRESH_TOKEN_INPUT_FORMAT;
+import static org.apache.camel.ExchangePattern.InOut;
 import static org.ehcache.config.builders.CacheConfigurationBuilder.newCacheConfigurationBuilder;
 import static org.ehcache.config.builders.CacheManagerBuilder.newCacheManagerBuilder;
 import static org.ehcache.config.builders.ExpiryPolicyBuilder.timeToLiveExpiration;
@@ -132,6 +133,7 @@ public class AuthenticationAPI {
         .from(DIRECT_LOGIN) //
         .routeId("login") //
         .marshal(LOGIN_INPUT_FORMAT) //
+        .setExchangePattern(InOut) //
         .dynamicRouter(login.route()) //
         ;
     }
@@ -149,6 +151,7 @@ public class AuthenticationAPI {
         .from(DIRECT_LOGIN_WITH_KEY) //
         .routeId("loginWithKey") //
         .marshal(LOGIN_WITH_KEY_INPUT_FORMAT) //
+        .setExchangePattern(InOut) //
         .dynamicRouter(loginWithKey.route()) //
         ;
     }
@@ -166,6 +169,7 @@ public class AuthenticationAPI {
         .routeId("refreshToken") //
         .process(this::prepareRefreshToken) //
         .marshal(REFRESH_TOKEN_INPUT_FORMAT) //
+        .setExchangePattern(InOut) //
         .dynamicRouter(refreshToken.route()) //
         ;
     }
