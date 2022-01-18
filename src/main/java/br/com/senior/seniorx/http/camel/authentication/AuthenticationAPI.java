@@ -83,6 +83,7 @@ public class AuthenticationAPI {
 
         .to(DIRECT_REFRESH_TOKEN) //
 
+        .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
         .endChoice() // Expired token
@@ -100,6 +101,7 @@ public class AuthenticationAPI {
 
         .end() // User login
 
+        .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
         .end() // Token found
