@@ -79,8 +79,14 @@ public class AuthenticationAPI {
         .choice() // Token found
         .when(builder.method(this, "tokenFound")) //
 
+        .to("log:tokenFound") //
+        .log(HEADERS_LOG) //
+
         .choice() // Expired token
         .when(builder.method(this, "isExpiredToken")) //
+
+        .to("log:tokenExpired") //
+        .log(HEADERS_LOG) //
 
         .to(DIRECT_REFRESH_TOKEN) //
 
@@ -92,6 +98,9 @@ public class AuthenticationAPI {
         .endChoice() // Expired token
 
         .otherwise() // Token not found
+
+        .to("log:tokenNotFound") //
+        .log(HEADERS_LOG) //
 
         .choice() // User login
         .when(builder.method(this, "isUserLogin")) //
@@ -134,6 +143,8 @@ public class AuthenticationAPI {
         .routeId("login") //
         .marshal(LOGIN_INPUT_FORMAT) //
         .setExchangePattern(InOut) //
+        .to("log:login") //
+        .log(HEADERS_LOG) //
         .dynamicRouter(login.route()) //
         ;
     }
@@ -152,6 +163,8 @@ public class AuthenticationAPI {
         .routeId("loginWithKey") //
         .marshal(LOGIN_WITH_KEY_INPUT_FORMAT) //
         .setExchangePattern(InOut) //
+        .to("log:loginWithKey") //
+        .log(HEADERS_LOG) //
         .dynamicRouter(loginWithKey.route()) //
         ;
     }
@@ -170,6 +183,8 @@ public class AuthenticationAPI {
         .process(this::prepareRefreshToken) //
         .marshal(REFRESH_TOKEN_INPUT_FORMAT) //
         .setExchangePattern(InOut) //
+        .to("log:refreshToken") //
+        .log(HEADERS_LOG) //
         .dynamicRouter(refreshToken.route()) //
         ;
     }
