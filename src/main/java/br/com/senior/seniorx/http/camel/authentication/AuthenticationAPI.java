@@ -160,6 +160,7 @@ public class AuthenticationAPI {
     private void login() {
         SeniorXHTTPRouteBuilder login = new SeniorXHTTPRouteBuilder(builder);
         login //
+        .method("post") //
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
@@ -181,6 +182,7 @@ public class AuthenticationAPI {
     private void loginWithKey() {
         SeniorXHTTPRouteBuilder loginWithKey = new SeniorXHTTPRouteBuilder(builder);
         loginWithKey //
+        .method("post") //
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) //
@@ -203,6 +205,7 @@ public class AuthenticationAPI {
     private void refreshToken() {
         SeniorXHTTPRouteBuilder refreshToken = new SeniorXHTTPRouteBuilder(builder);
         refreshToken //
+        .method("post") //
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .

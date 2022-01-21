@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>br.com.senior</groupId>
 	<artifactId>seniorx-http-camel-api</artifactId>
-	<version>0.0.9-alpha</version>
+	<version>0.0.10-alpha</version>
 	<packaging>jar</packaging>
 
 	<name>Senior X HTTP Camel API</name>
@@ -261,6 +261,22 @@
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-jackson-starter</artifactId>
 			<version>3.11.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.quarkus</groupId>
+			<artifactId>camel-quarkus-rest</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.quarkus</groupId>
+			<artifactId>camel-quarkus-http</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.quarkus</groupId>
+			<artifactId>camel-quarkus-jackson</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.quarkus</groupId>
+			<artifactId>camel-quarkus-headersmap</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.ehcache</groupId>

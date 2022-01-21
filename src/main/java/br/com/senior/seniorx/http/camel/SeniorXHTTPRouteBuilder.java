@@ -13,8 +13,9 @@ public class SeniorXHTTPRouteBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(SeniorXHTTPRouteBuilder.class);
 
     protected final RouteBuilder builder;
-    protected String baseUrl = "{{seniorx.baseurl}}";
+    protected String host = "{{seniorx.host}}";
     protected boolean anonymous = false;
+    protected String method;
     protected String domain;
     protected String service;
     protected String primitiveType;
@@ -24,8 +25,13 @@ public class SeniorXHTTPRouteBuilder {
         this.builder = builder;
     }
 
-    public SeniorXHTTPRouteBuilder baseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
+    public SeniorXHTTPRouteBuilder method(String method) {
+        this.method = method;
+        return this;
+    }
+
+    public SeniorXHTTPRouteBuilder host(String host) {
+        this.host = host;
         return this;
     }
 
@@ -60,20 +66,23 @@ public class SeniorXHTTPRouteBuilder {
             return null;
         }
         PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
-        String route = resolve(properties, baseUrl);
-        if (route == null) {
+        String resolvedHost = resolve(properties, host);
+        if (resolvedHost == null) {
             return null;
         }
-        if (route.endsWith("/")) {
-            route = route.substring(0, route.length() - 1);
+        if (resolvedHost.endsWith("/")) {
+            resolvedHost = resolvedHost.substring(0, resolvedHost.length() - 1);
         }
+        String route = "rest:";
+        route += method + ':';
         if (anonymous) {
             route += "/anonymous";
         }
         route += '/' + domain //
                 + '/' + service //
                 + '/' + primitiveType //
-                + '/' + primitive;
+                + '/' + primitive //
+                + "?host=" + resolvedHost;
 
         message.setHeader("route", route);
         message.setHeader("Content-Type", "application/json");
