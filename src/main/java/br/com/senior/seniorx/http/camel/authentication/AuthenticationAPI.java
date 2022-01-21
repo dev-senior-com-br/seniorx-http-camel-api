@@ -33,6 +33,8 @@ public class AuthenticationAPI {
     private static final String AUTHENTICATE = "authenticate";
     private static final String HEADERS_LOG = "${in.headers}";
 
+    private static final String DIRECT_TOKEN_FOUND = "direct:authentication-token-found";
+    private static final String DIRECT_TOKEN_NOT_FOUND = "direct:authentication-token-not-found";
     private static final String DIRECT_LOGIN = "direct:authentication-login";
     private static final String DIRECT_LOGIN_WITH_KEY = "direct:authentication-login-with-key";
     private static final String DIRECT_REFRESH_TOKEN = "direct:authentication-refresh-token";
@@ -62,6 +64,10 @@ public class AuthenticationAPI {
     }
 
     public void authenticate(String from, Processor enrichWithToken, String to) {
+        tokenFound();
+
+        tokenNotFound();
+
         login();
 
         loginWithKey();
@@ -71,6 +77,7 @@ public class AuthenticationAPI {
         builder //
         .from(from) //
         .routeId(AUTHENTICATE) //
+        .setExchangePattern(InOut) //
         .to("log:authenticate") //
         .log(HEADERS_LOG) //
 
@@ -79,6 +86,28 @@ public class AuthenticationAPI {
         .choice() // Token found
         .when(builder.method(this, "tokenFound")) //
 
+        .to(DIRECT_TOKEN_FOUND) //
+
+        .otherwise() // Token not found
+
+        .to(DIRECT_TOKEN_NOT_FOUND) //
+
+        .end() // Token found
+
+        .process(enrichWithToken) //
+        .to(to) //
+        ;
+    }
+
+    public static void addAuthorization(Exchange exchange) {
+        Token token = (Token) exchange.getProperty(TOKEN);
+        exchange.getMessage().setHeader("Authorization", "Bearer " + token.accessToken);
+    }
+
+    private void tokenFound() {
+        builder //
+        .from(DIRECT_TOKEN_FOUND) //
+        .routeId("token-found") //
         .to("log:tokenFound") //
         .log(HEADERS_LOG) //
 
@@ -95,10 +124,14 @@ public class AuthenticationAPI {
         .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
-        .endChoice() // Expired token
+        .end() // Expired token
+        ;
+    }
 
-        .otherwise() // Token not found
-
+    private void tokenNotFound() {
+        builder //
+        .from(DIRECT_TOKEN_NOT_FOUND) //
+        .routeId("token-not-found") //
         .to("log:tokenNotFound") //
         .log(HEADERS_LOG) //
 
@@ -117,17 +150,7 @@ public class AuthenticationAPI {
         .log(HEADERS_LOG) //
         .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
-
-        .end() // Token found
-
-        .process(enrichWithToken) //
-        .to(to) //
         ;
-    }
-
-    public static void addAuthorization(Exchange exchange) {
-        Token token = (Token) exchange.getProperty(TOKEN);
-        exchange.getMessage().setHeader("Authorization", "Bearer " + token.accessToken);
     }
 
     private void login() {
