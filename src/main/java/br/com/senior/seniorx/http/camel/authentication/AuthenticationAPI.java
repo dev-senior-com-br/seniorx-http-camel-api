@@ -77,7 +77,6 @@ public class AuthenticationAPI {
         builder //
         .from(from) //
         .routeId(AUTHENTICATE) //
-        .setExchangePattern(InOut) //
         .to("log:authenticate") //
         .log(HEADERS_LOG) //
 
@@ -86,10 +85,12 @@ public class AuthenticationAPI {
         .choice() // Token found
         .when(builder.method(this, "tokenFound")) //
 
+        .setExchangePattern(InOut) //
         .to(DIRECT_TOKEN_FOUND) //
 
         .otherwise() // Token not found
 
+        .setExchangePattern(InOut) //
         .to(DIRECT_TOKEN_NOT_FOUND) //
 
         .end() // Token found
@@ -108,7 +109,6 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_TOKEN_FOUND) //
         .routeId("token-found") //
-        .setExchangePattern(InOut) //
         .to("log:tokenFound") //
         .log(HEADERS_LOG) //
 
@@ -118,6 +118,7 @@ public class AuthenticationAPI {
         .to("log:tokenExpired") //
         .log(HEADERS_LOG) //
 
+        .setExchangePattern(InOut) //
         .to(DIRECT_REFRESH_TOKEN) //
 
         .to("log:refreshedToken") //
@@ -133,17 +134,18 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_TOKEN_NOT_FOUND) //
         .routeId("token-not-found") //
-        .setExchangePattern(InOut) //
         .to("log:tokenNotFound") //
         .log(HEADERS_LOG) //
 
         .choice() // User login
         .when(builder.method(this, "isUserLogin")) //
 
+        .setExchangePattern(InOut) //
         .to(DIRECT_LOGIN) //
 
         .otherwise() // Application login
 
+        .setExchangePattern(InOut) //
         .to(DIRECT_LOGIN_WITH_KEY) //
 
         .end() // User login
@@ -166,12 +168,13 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_LOGIN) //
         .routeId("login") //
-        .setExchangePattern(InOut) //
         .marshal(LOGIN_INPUT_FORMAT) //
-        .setExchangePattern(InOut) //
         .to("log:login") //
         .log(HEADERS_LOG) //
+        .setExchangePattern(InOut) //
         .dynamicRouter(login.route()) //
+        .to("log:logged") //
+        .log(HEADERS_LOG) //
         ;
     }
 
@@ -187,12 +190,13 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_LOGIN_WITH_KEY) //
         .routeId("loginWithKey") //
-        .setExchangePattern(InOut) //
         .marshal(LOGIN_WITH_KEY_INPUT_FORMAT) //
-        .setExchangePattern(InOut) //
         .to("log:loginWithKey") //
         .log(HEADERS_LOG) //
+        .setExchangePattern(InOut) //
         .dynamicRouter(loginWithKey.route()) //
+        .to("log:loggedWithKey") //
+        .log(HEADERS_LOG) //
         ;
     }
 
@@ -207,13 +211,14 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_REFRESH_TOKEN) //
         .routeId("refreshToken") //
-        .setExchangePattern(InOut) //
         .process(this::prepareRefreshToken) //
         .marshal(REFRESH_TOKEN_INPUT_FORMAT) //
-        .setExchangePattern(InOut) //
         .to("log:refreshToken") //
         .log(HEADERS_LOG) //
+        .setExchangePattern(InOut) //
         .dynamicRouter(refreshToken.route()) //
+        .to("log:refreshedToken") //
+        .log(HEADERS_LOG) //
         ;
     }
 
