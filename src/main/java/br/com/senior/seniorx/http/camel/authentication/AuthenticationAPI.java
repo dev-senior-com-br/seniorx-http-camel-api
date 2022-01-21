@@ -108,6 +108,7 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_TOKEN_FOUND) //
         .routeId("token-found") //
+        .setExchangePattern(InOut) //
         .to("log:tokenFound") //
         .log(HEADERS_LOG) //
 
@@ -132,6 +133,7 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_TOKEN_NOT_FOUND) //
         .routeId("token-not-found") //
+        .setExchangePattern(InOut) //
         .to("log:tokenNotFound") //
         .log(HEADERS_LOG) //
 
@@ -164,6 +166,7 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_LOGIN) //
         .routeId("login") //
+        .setExchangePattern(InOut) //
         .marshal(LOGIN_INPUT_FORMAT) //
         .setExchangePattern(InOut) //
         .to("log:login") //
@@ -184,6 +187,7 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_LOGIN_WITH_KEY) //
         .routeId("loginWithKey") //
+        .setExchangePattern(InOut) //
         .marshal(LOGIN_WITH_KEY_INPUT_FORMAT) //
         .setExchangePattern(InOut) //
         .to("log:loginWithKey") //
@@ -203,6 +207,7 @@ public class AuthenticationAPI {
         builder //
         .from(DIRECT_REFRESH_TOKEN) //
         .routeId("refreshToken") //
+        .setExchangePattern(InOut) //
         .process(this::prepareRefreshToken) //
         .marshal(REFRESH_TOKEN_INPUT_FORMAT) //
         .setExchangePattern(InOut) //
