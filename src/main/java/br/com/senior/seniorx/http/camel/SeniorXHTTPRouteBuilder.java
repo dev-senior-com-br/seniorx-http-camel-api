@@ -18,7 +18,7 @@ public class SeniorXHTTPRouteBuilder {
     protected String method;
     protected String domain;
     protected String service;
-    protected String primitiveType;
+    protected PrimitiveType primitiveType;
     protected String primitive;
 
     public SeniorXHTTPRouteBuilder(RouteBuilder builder) {
@@ -50,7 +50,7 @@ public class SeniorXHTTPRouteBuilder {
         return this;
     }
 
-    public SeniorXHTTPRouteBuilder primitiveType(String primitiveType) {
+    public SeniorXHTTPRouteBuilder primitiveType(PrimitiveType primitiveType) {
         this.primitiveType = primitiveType;
         return this;
     }
@@ -78,9 +78,9 @@ public class SeniorXHTTPRouteBuilder {
         if (anonymous) {
             route += "/anonymous";
         }
-        route += '/' + domain //
+        route += "/rest/" + domain //
                 + '/' + service //
-                + '/' + primitiveType //
+                + '/' + primitiveType.path //
                 + '/' + primitive //
                 + "?host=" + resolvedHost;
 

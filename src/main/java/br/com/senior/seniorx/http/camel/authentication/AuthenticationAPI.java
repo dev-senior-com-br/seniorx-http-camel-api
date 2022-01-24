@@ -1,5 +1,6 @@
 package br.com.senior.seniorx.http.camel.authentication;
 
+import static br.com.senior.seniorx.http.camel.PrimitiveType.ACTION;
 import static br.com.senior.seniorx.http.camel.authentication.LoginInput.LOGIN_INPUT_FORMAT;
 import static br.com.senior.seniorx.http.camel.authentication.LoginWithKeyInput.LOGIN_WITH_KEY_INPUT_FORMAT;
 import static br.com.senior.seniorx.http.camel.authentication.RefreshTokenInput.REFRESH_TOKEN_INPUT_FORMAT;
@@ -28,7 +29,6 @@ public class AuthenticationAPI {
 
     private static final String PLATFORM = "platform";
     private static final String AUTHENTICATION = "authentication";
-    private static final String ACTION = "action";
 
     private static final String AUTHENTICATE = "authenticate";
     private static final String HEADERS_LOG = "${in.headers}";
