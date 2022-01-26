@@ -13,7 +13,7 @@ public class SeniorXHTTPRouteBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(SeniorXHTTPRouteBuilder.class);
 
     protected final RouteBuilder builder;
-    protected String host = "{{seniorx.host}}";
+    protected String url = "{{seniorx.url}}";
     protected boolean anonymous = false;
     protected String method;
     protected String domain;
@@ -30,8 +30,8 @@ public class SeniorXHTTPRouteBuilder {
         return this;
     }
 
-    public SeniorXHTTPRouteBuilder host(String host) {
-        this.host = host;
+    public SeniorXHTTPRouteBuilder url(String url) {
+        this.url = url;
         return this;
     }
 
@@ -65,18 +65,16 @@ public class SeniorXHTTPRouteBuilder {
         if (message.getHeader("route") != null) {
             return null;
         }
-        /*
-         * PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
-         * String resolvedHost = resolve(properties, host);
-         * if (resolvedHost == null) {
-         * return null;
-         * }
-         * if (resolvedHost.endsWith("/")) {
-         * resolvedHost = resolvedHost.substring(0, resolvedHost.length() - 1);
-         * }
-         */
-        String route = "rest:";
-        route += method + ':';
+
+        PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
+        String resolvedUrl = resolve(properties, url);
+        if (resolvedUrl == null) {
+            return null;
+        }
+        if (resolvedUrl.endsWith("/")) {
+            resolvedUrl = resolvedUrl.substring(0, resolvedUrl.length() - 1);
+        }
+        String route = resolvedUrl;
         if (anonymous) {
             route += "/anonymous";
         }
@@ -84,11 +82,11 @@ public class SeniorXHTTPRouteBuilder {
                 + '/' + service //
                 + '/' + primitiveType.path //
                 + '/' + primitive //
-        // + "?host=" + resolvedHost //
-        ;
+                ;
 
         message.setHeader("route", route);
         message.setHeader("Content-Type", "application/json");
+        message.setHeader(Exchange.HTTP_METHOD, method);
 
         LOGGER.info("Routing to {}", route);
 
