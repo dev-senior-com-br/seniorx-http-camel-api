@@ -65,14 +65,16 @@ public class SeniorXHTTPRouteBuilder {
         if (message.getHeader("route") != null) {
             return null;
         }
-        PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
-        String resolvedHost = resolve(properties, host);
-        if (resolvedHost == null) {
-            return null;
-        }
-        if (resolvedHost.endsWith("/")) {
-            resolvedHost = resolvedHost.substring(0, resolvedHost.length() - 1);
-        }
+        /*
+         * PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
+         * String resolvedHost = resolve(properties, host);
+         * if (resolvedHost == null) {
+         * return null;
+         * }
+         * if (resolvedHost.endsWith("/")) {
+         * resolvedHost = resolvedHost.substring(0, resolvedHost.length() - 1);
+         * }
+         */
         String route = "rest:";
         route += method + ':';
         if (anonymous) {
@@ -82,7 +84,8 @@ public class SeniorXHTTPRouteBuilder {
                 + '/' + service //
                 + '/' + primitiveType.path //
                 + '/' + primitive //
-                + "?host=" + resolvedHost;
+        // + "?host=" + resolvedHost //
+        ;
 
         message.setHeader("route", route);
         message.setHeader("Content-Type", "application/json");

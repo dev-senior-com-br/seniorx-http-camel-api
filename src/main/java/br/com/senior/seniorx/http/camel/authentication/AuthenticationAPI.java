@@ -16,6 +16,7 @@ import java.util.Date;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.rest.RestBindingMode;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
@@ -64,6 +65,12 @@ public class AuthenticationAPI {
     }
 
     public void authenticate(String from, Processor enrichWithToken, String to) {
+        builder.restConfiguration() //
+        .host("platform-arquitetura.senior.com.br/t/senior.com.br/bridge/1.0") //
+        .scheme("https") //
+        .bindingMode(RestBindingMode.auto) //
+        .port(443);
+
         tokenFound();
 
         tokenNotFound();
