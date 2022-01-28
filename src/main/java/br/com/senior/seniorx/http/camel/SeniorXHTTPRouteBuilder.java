@@ -116,12 +116,12 @@ public class SeniorXHTTPRouteBuilder {
         }
         LOGGER.info("Routing to {}", route);
 
-        HttpComponent httpComponent = exchange.getContext().getComponent("http4", HttpComponent.class);
+        HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
-        String endPointURI = "http4://httpUrlToken?throwExceptionOnFailure=false";
+        String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
         if (route.startsWith("https")) {
-            httpComponent = exchange.getContext().getComponent("https4", HttpComponent.class);
-            endPointURI = "https4://httpUrlToken?throwExceptionOnFailure=false";
+            httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
+            endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
         }
 
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
@@ -137,13 +137,13 @@ public class SeniorXHTTPRouteBuilder {
     }
 
     private void configureInsecureCall(String route, Exchange exchange) {
-        String endPointURI = "http4://httpUrlToken?throwExceptionOnFailure=false";
+        String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
 
-        HttpComponent httpComponent = exchange.getContext().getComponent("http4", HttpComponent.class);
+        HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
         if (route.startsWith("https")) {
-            endPointURI = "https4://httpUrlToken?throwExceptionOnFailure=false";
-            httpComponent = exchange.getContext().getComponent("https4", HttpComponent.class);
+            endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
+            httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
 
             SSLContext sslctxt = getSSLContext();
             HttpClientConfigurer httpClientConfig = getEndpointClientConfigurer(sslctxt);
