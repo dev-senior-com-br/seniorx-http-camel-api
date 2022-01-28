@@ -133,7 +133,8 @@ public class SeniorXHTTPRouteBuilder {
     }
 
     private void processResponse(Exchange exchange) {
-
+        LOGGER.info("Response body {}", exchange.getMessage().getBody());
+        LOGGER.info("Response in {}", exchange.getIn().getBody());
     }
 
     private void configureInsecureCall(String route, Exchange exchange) {
