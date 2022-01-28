@@ -180,7 +180,7 @@ public class AuthenticationAPI {
         .to("log:login") //
         .log(HEADERS_LOG) //
         .setExchangePattern(InOut) //
-        .dynamicRouter(login.route()) //
+        .process(login::route) //
         .to("log:logged") //
         .log(HEADERS_LOG) //
         ;
@@ -203,7 +203,7 @@ public class AuthenticationAPI {
         .to("log:loginWithKey") //
         .log(HEADERS_LOG) //
         .setExchangePattern(InOut) //
-        .dynamicRouter(loginWithKey.route()) //
+        .process(loginWithKey::route) //
         .to("log:loggedWithKey") //
         .log(HEADERS_LOG) //
         ;
@@ -226,7 +226,7 @@ public class AuthenticationAPI {
         .to("log:refreshToken") //
         .log(HEADERS_LOG) //
         .setExchangePattern(InOut) //
-        .dynamicRouter(refreshToken.route()) //
+        .process(refreshToken::route) //
         .to("log:refreshedToken") //
         .log(HEADERS_LOG) //
         ;
