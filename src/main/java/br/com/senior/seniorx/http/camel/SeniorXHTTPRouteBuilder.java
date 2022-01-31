@@ -107,37 +107,19 @@ public class SeniorXHTTPRouteBuilder {
         Message message = exchange.getMessage();
         message.setHeader("route", route);
         message.setHeader("Content-Type", "application/json");
+        message.setHeader("body", message.getBody());
         message.setHeader(Exchange.HTTP_METHOD, method);
 
-        if (insecure) {
-            LOGGER.warn("Routing to insecure http call {}", route);
-            configureInsecureCall(route, exchange);
-            return;
-        }
-        LOGGER.info("Routing to {}", route);
-
-        HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
-
-        // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
-        if (route.startsWith("https")) {
-            httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
-            // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
-        }
-
-        exchange.getIn().setHeader(Exchange.HTTP_URI, route);
-        try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
-            producerTemplate.request(httpComponent.createEndpoint(route), this::processResponse);
-        } catch (Exception e) {
-            throw new SeniorXHTTPException(e);
-        }
+        configureCall(route, exchange);
     }
 
-    private void processResponse(Exchange exchange) {
-        LOGGER.info("Response body {}", exchange.getMessage().getBody());
-        LOGGER.info("Response in {}", exchange.getIn().getBody());
+    private void prepare(Exchange exchange) {
+        Message message = exchange.getMessage();
+        message.setBody(message.getHeader("body"));
+        LOGGER.info("Body {}", message.getBody());
     }
 
-    private void configureInsecureCall(String route, Exchange exchange) {
+    private void configureCall(String route, Exchange exchange) {
         // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
 
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
@@ -146,21 +128,33 @@ public class SeniorXHTTPRouteBuilder {
             // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
             httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
 
-            SSLContext sslctxt = getSSLContext();
-            HttpClientConfigurer httpClientConfig = getEndpointClientConfigurer(sslctxt);
-            httpComponent.setHttpClientConfigurer(httpClientConfig);
-            HostnameVerifier hnv = new AllowAll();
-            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslctxt, hnv);
-            Registry<ConnectionSocketFactory> lookup = RegistryBuilder.<ConnectionSocketFactory>create().register("https", sslSocketFactory).build();
-            HttpClientConnectionManager connManager = new BasicHttpClientConnectionManager(lookup);
-            httpComponent.setClientConnectionManager(connManager);
+            if (insecure) {
+                configureInsecureCall(route, httpComponent);
+            }
         }
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
         try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
-            producerTemplate.request(httpComponent.createEndpoint(route), this::processResponse);
+            LOGGER.info("Routing to {}", route);
+            producerTemplate.request(httpComponent.createEndpoint(route), this::prepare);
+            Exception e = exchange.getException();
+            if (e != null) {
+                throw new SeniorXHTTPException(e);
+            }
         } catch (Exception e) {
             throw new SeniorXHTTPException(e);
         }
+    }
+
+    private void configureInsecureCall(String route, HttpComponent httpComponent) {
+        LOGGER.warn("Routing to insecure http call {}", route);
+        SSLContext sslctxt = getSSLContext();
+        HttpClientConfigurer httpClientConfig = getEndpointClientConfigurer(sslctxt);
+        httpComponent.setHttpClientConfigurer(httpClientConfig);
+        HostnameVerifier hnv = new AllowAll();
+        SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslctxt, hnv);
+        Registry<ConnectionSocketFactory> lookup = RegistryBuilder.<ConnectionSocketFactory>create().register("https", sslSocketFactory).build();
+        HttpClientConnectionManager connManager = new BasicHttpClientConnectionManager(lookup);
+        httpComponent.setClientConnectionManager(connManager);
     }
 
     private SSLContext getSSLContext() {
