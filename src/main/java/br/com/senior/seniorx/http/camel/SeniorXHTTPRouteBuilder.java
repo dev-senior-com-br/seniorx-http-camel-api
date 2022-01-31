@@ -118,15 +118,15 @@ public class SeniorXHTTPRouteBuilder {
 
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
-        String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
+        // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
         if (route.startsWith("https")) {
             httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
-            endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
+            // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
         }
 
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
         try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
-            producerTemplate.request(httpComponent.createEndpoint(endPointURI), this::processResponse);
+            producerTemplate.request(httpComponent.createEndpoint(route), this::processResponse);
         } catch (Exception e) {
             throw new SeniorXHTTPException(e);
         }
@@ -138,12 +138,12 @@ public class SeniorXHTTPRouteBuilder {
     }
 
     private void configureInsecureCall(String route, Exchange exchange) {
-        String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
+        // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
 
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
         if (route.startsWith("https")) {
-            endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
+            // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
             httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
 
             SSLContext sslctxt = getSSLContext();
@@ -157,7 +157,7 @@ public class SeniorXHTTPRouteBuilder {
         }
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
         try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
-            producerTemplate.request(httpComponent.createEndpoint(endPointURI), this::processResponse);
+            producerTemplate.request(httpComponent.createEndpoint(route), this::processResponse);
         } catch (Exception e) {
             throw new SeniorXHTTPException(e);
         }
