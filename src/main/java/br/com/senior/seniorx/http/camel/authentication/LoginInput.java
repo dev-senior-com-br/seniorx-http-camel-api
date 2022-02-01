@@ -21,4 +21,9 @@ public class LoginInput {
     @JsonProperty("password")
     public String password;
 
+    @Override
+    public String toString() {
+        return "LoginInput [username=" + username + ", password=" + password + "]";
+    }
+
 }

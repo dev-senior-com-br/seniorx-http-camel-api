@@ -19,4 +19,9 @@ public class RefreshTokenInput {
     @JsonProperty("refreshToken")
     public String refreshToken;
 
+    @Override
+    public String toString() {
+        return "RefreshTokenInput [refreshToken=" + refreshToken + "]";
+    }
+
 }

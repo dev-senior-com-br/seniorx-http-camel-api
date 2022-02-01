@@ -266,6 +266,10 @@ public class AuthenticationAPI {
     }
 
     private void unmarshallToken(Exchange exchange) {
+        Exception exception = exchange.getException();
+        if (exception != null) {
+            throw new AuthenticationException(exception);
+        }
         LoginOutput output = (LoginOutput) exchange.getMessage().getBody();
         if (output.jsonToken == null) {
             throw new AuthenticationException(output.reason + ": " + output.message);

@@ -107,19 +107,21 @@ public class SeniorXHTTPRouteBuilder {
         Message message = exchange.getMessage();
         message.setHeader("route", route);
         message.setHeader("Content-Type", "application/json");
-        message.setHeader("body", message.getBody());
         message.setHeader(Exchange.HTTP_METHOD, method);
 
-        configureCall(route, exchange);
+        exchange.setProperty("body", message.getBody());
+
+        call(route, exchange);
     }
 
     private void prepare(Exchange exchange) {
         Message message = exchange.getMessage();
-        message.setBody(message.getHeader("body"));
+        message.setBody(exchange.getProperty("body"));
         LOGGER.info("Body {}", message.getBody());
+        LOGGER.info("Headers {}", message.getHeaders());
     }
 
-    private void configureCall(String route, Exchange exchange) {
+    private void call(String route, Exchange exchange) {
         // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
 
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);

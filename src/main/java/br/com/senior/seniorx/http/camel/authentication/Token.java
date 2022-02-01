@@ -25,4 +25,11 @@ public class Token {
     @JsonProperty("expire_time")
     public Long expireTime;
 
+    @Override
+    public String toString() {
+        String at = accessToken == null ? null : accessToken.isEmpty() ? accessToken : "?";
+        String rt = refreshToken == null ? null : refreshToken.isEmpty() ? refreshToken : "?";
+        return "Token [accessToken=" + at + ", refreshToken=" + rt + ", expiresIn=" + expiresIn + ", expireTime=" + expireTime + "]";
+    }
+
 }

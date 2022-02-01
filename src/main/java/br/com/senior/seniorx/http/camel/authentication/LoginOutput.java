@@ -28,4 +28,9 @@ public class LoginOutput {
     @JsonProperty("reason")
     public String reason;
 
+    @Override
+    public String toString() {
+        return "LoginOutput [jsonToken=" + jsonToken + ", message=" + message + ", reason=" + reason + "]";
+    }
+
 }

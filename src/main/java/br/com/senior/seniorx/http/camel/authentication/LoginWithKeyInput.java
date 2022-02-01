@@ -23,4 +23,9 @@ public class LoginWithKeyInput {
     @JsonProperty("tenantName")
     public String tenantName;
 
+    @Override
+    public String toString() {
+        return "LoginWithKeyInput [accessKey=" + accessKey + ", secret=" + secret + ", tenantName=" + tenantName + "]";
+    }
+
 }
