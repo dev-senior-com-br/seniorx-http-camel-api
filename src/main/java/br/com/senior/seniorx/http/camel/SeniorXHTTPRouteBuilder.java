@@ -123,12 +123,12 @@ public class SeniorXHTTPRouteBuilder {
     }
 
     private void call(String route, Exchange exchange) {
-        String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
+        // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
 
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
         if (route.startsWith("https")) {
-            endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
+            // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
             httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
 
             if (insecure) {
@@ -138,7 +138,7 @@ public class SeniorXHTTPRouteBuilder {
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
         try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
             LOGGER.info("Routing to {}", route);
-            Exchange request = producerTemplate.request(httpComponent.createEndpoint(endPointURI), this::prepare);
+            Exchange request = producerTemplate.request(httpComponent.createEndpoint(route), this::prepare);
             LOGGER.info("Routed to {}", route);
             Exception e = request.getException();
             if (e != null) {
