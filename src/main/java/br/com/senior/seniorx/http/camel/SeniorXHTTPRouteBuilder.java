@@ -105,11 +105,10 @@ public class SeniorXHTTPRouteBuilder {
                 ;
 
         Message message = exchange.getMessage();
-        message.setHeader("route", route);
-        message.setHeader("Content-Type", "application/json");
-        message.setHeader(Exchange.HTTP_METHOD, method);
 
         exchange.setProperty("body", message.getBody());
+        LOGGER.info("Body {}", message.getBody());
+        LOGGER.info("Headers {}", message.getHeaders());
 
         call(route, exchange);
     }
@@ -117,17 +116,19 @@ public class SeniorXHTTPRouteBuilder {
     private void prepare(Exchange exchange) {
         Message message = exchange.getMessage();
         message.setBody(exchange.getProperty("body"));
+        message.setHeader("Content-Type", "application/json");
+        message.setHeader(Exchange.HTTP_METHOD, method);
         LOGGER.info("Body {}", message.getBody());
         LOGGER.info("Headers {}", message.getHeaders());
     }
 
     private void call(String route, Exchange exchange) {
-        // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
+        String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
 
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
         if (route.startsWith("https")) {
-            // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
+            endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
             httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
 
             if (insecure) {
@@ -137,8 +138,9 @@ public class SeniorXHTTPRouteBuilder {
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
         try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
             LOGGER.info("Routing to {}", route);
-            producerTemplate.request(httpComponent.createEndpoint(route), this::prepare);
-            Exception e = exchange.getException();
+            Exchange request = producerTemplate.request(httpComponent.createEndpoint(endPointURI), this::prepare);
+            LOGGER.info("Routed to {}", route);
+            Exception e = request.getException();
             if (e != null) {
                 throw new SeniorXHTTPException(e);
             }
