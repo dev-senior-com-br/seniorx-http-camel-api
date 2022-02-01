@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Map.Entry;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -105,19 +106,19 @@ public class SeniorXHTTPRouteBuilder {
                 ;
 
         Message message = exchange.getMessage();
-
-        exchange.setProperty("body", message.getBody());
-        LOGGER.info("Body {}", message.getBody());
-        LOGGER.info("Headers {}", message.getHeaders());
+        message.setHeader("Content-Type", "application/json");
+        message.setHeader(Exchange.HTTP_METHOD, method);
 
         call(route, exchange);
     }
 
-    private void prepare(Exchange exchange) {
+    private void prepare(Exchange source, Exchange exchange) {
+        Message sourceMessage = source.getMessage();
         Message message = exchange.getMessage();
-        message.setBody(exchange.getProperty("body"));
-        message.setHeader("Content-Type", "application/json");
-        message.setHeader(Exchange.HTTP_METHOD, method);
+        message.setBody(sourceMessage.getBody());
+        for (Entry<String, Object> entry : sourceMessage.getHeaders().entrySet()) {
+            message.setHeader(entry.getKey(), entry.getValue());
+        }
         LOGGER.info("Body {}", message.getBody());
         LOGGER.info("Headers {}", message.getHeaders());
     }
@@ -138,12 +139,14 @@ public class SeniorXHTTPRouteBuilder {
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
         try (ProducerTemplate producerTemplate = exchange.getContext().createProducerTemplate()) {
             LOGGER.info("Routing to {}", route);
-            Exchange request = producerTemplate.request(httpComponent.createEndpoint(route), this::prepare);
+            Exchange request = producerTemplate.request(httpComponent.createEndpoint(route), new ForwardProcessor(exchange, this::prepare));
             LOGGER.info("Routed to {}", route);
             Exception e = request.getException();
             if (e != null) {
                 throw new SeniorXHTTPException(e);
             }
+        } catch (SeniorXHTTPException e) {
+            throw e;
         } catch (Exception e) {
             throw new SeniorXHTTPException(e);
         }
