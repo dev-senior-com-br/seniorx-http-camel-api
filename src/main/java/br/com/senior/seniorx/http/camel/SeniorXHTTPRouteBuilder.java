@@ -32,10 +32,12 @@ public class SeniorXHTTPRouteBuilder {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SeniorXHTTPRouteBuilder.class);
 
+    private static final String HTTPS = "https";
+
     protected final RouteBuilder builder;
     protected String url = "{{seniorx.url}}";
     protected boolean anonymous = false;
-    protected boolean insecure = true;
+    protected String allowedInsecureHost = "{{seniorx.allowedinsecurehost}}";
     protected String method;
     protected String domain;
     protected String service;
@@ -61,8 +63,8 @@ public class SeniorXHTTPRouteBuilder {
         return this;
     }
 
-    public SeniorXHTTPRouteBuilder insecure(boolean insecure) {
-        this.insecure = insecure;
+    public SeniorXHTTPRouteBuilder allowedInsecureHost(String allowedInsecureHost) {
+        this.allowedInsecureHost = allowedInsecureHost;
         return this;
     }
 
@@ -108,20 +110,17 @@ public class SeniorXHTTPRouteBuilder {
         message.setHeader("Content-Type", "application/json");
         message.setHeader(Exchange.HTTP_METHOD, method);
 
-        call(route, exchange);
+        call(route, resolve(properties, allowedInsecureHost), exchange);
     }
 
-    private void call(String route, Exchange exchange) {
-        // String endPointURI = "http://httpUrlToken?throwExceptionOnFailure=false";
-
+    private void call(String route, String insecureHost, Exchange exchange) {
         HttpComponent httpComponent = exchange.getContext().getComponent("http", HttpComponent.class);
 
-        if (route.startsWith("https")) {
-            // endPointURI = "https://httpUrlToken?throwExceptionOnFailure=false";
-            httpComponent = exchange.getContext().getComponent("https", HttpComponent.class);
+        if (route.startsWith(HTTPS)) {
+            httpComponent = exchange.getContext().getComponent(HTTPS, HttpComponent.class);
 
-            if (insecure) {
-                configureInsecureCall(route, httpComponent);
+            if (insecureHost != null) {
+                configureInsecureCall(route, insecureHost, httpComponent);
             }
         }
         exchange.getIn().setHeader(Exchange.HTTP_URI, route);
@@ -142,14 +141,14 @@ public class SeniorXHTTPRouteBuilder {
         }
     }
 
-    private void configureInsecureCall(String route, HttpComponent httpComponent) {
+    private void configureInsecureCall(String route, String insecureHost, HttpComponent httpComponent) {
         LOGGER.warn("Routing to insecure http call {}", route);
         SSLContext sslctxt = getSSLContext();
         HttpClientConfigurer httpClientConfig = getEndpointClientConfigurer(sslctxt);
         httpComponent.setHttpClientConfigurer(httpClientConfig);
-        HostnameVerifier hnv = new AllowAll();
+        HostnameVerifier hnv = new AllowHost(insecureHost);
         SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslctxt, hnv);
-        Registry<ConnectionSocketFactory> lookup = RegistryBuilder.<ConnectionSocketFactory>create().register("https", sslSocketFactory).build();
+        Registry<ConnectionSocketFactory> lookup = RegistryBuilder.<ConnectionSocketFactory>create().register(HTTPS, sslSocketFactory).build();
         HttpClientConnectionManager connManager = new BasicHttpClientConnectionManager(lookup);
         httpComponent.setClientConnectionManager(connManager);
     }
@@ -167,6 +166,7 @@ public class SeniorXHTTPRouteBuilder {
     }
 
     private class TrustALLManager implements X509TrustManager {
+
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
         }
@@ -179,14 +179,28 @@ public class SeniorXHTTPRouteBuilder {
         public X509Certificate[] getAcceptedIssuers() {
             return new X509Certificate[0];
         }
+
     }
 
-    private static class AllowAll implements HostnameVerifier {
+    private static class AllowHost implements HostnameVerifier {
+
+        private final String allowedInsecureHost;
+
+        public AllowHost(String allowedInsecureHost) {
+            this.allowedInsecureHost = allowedInsecureHost;
+        }
+
         @Override
         public boolean verify(String hostname, SSLSession session) {
-            LOGGER.warn("Allowing {}", hostname);
-            return true;
+            boolean allowed = allowedInsecureHost.equals(hostname);
+            if (allowed) {
+                LOGGER.debug("Allowing {}", hostname);
+            } else {
+                LOGGER.error("Blocking {}", hostname);
+            }
+            return allowed;
         }
+
     }
 
     private HttpClientConfigurer getEndpointClientConfigurer(final SSLContext sslContext) {
