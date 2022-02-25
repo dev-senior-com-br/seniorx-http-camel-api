@@ -12,6 +12,7 @@ import static org.ehcache.config.units.MemoryUnit.B;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.UUID;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -58,12 +59,28 @@ public class AuthenticationAPI {
             .build());
 
     private final RouteBuilder builder;
+    private final UUID id = UUID.randomUUID();
+    private final String route = "direct:seniorx-authentication-" + id.toString();
+    private final String to = "direct:seniorx-authentication-response-" + id.toString();
 
     public AuthenticationAPI(RouteBuilder builder) {
         this.builder = builder;
     }
 
-    public void authenticate(String from, Processor enrichWithToken, String to) {
+    public String route() {
+        return route;
+    }
+
+    public String responseRoute() {
+        return to;
+    }
+
+    public void prepare() {
+        prepare(exchange -> {
+        });
+    }
+
+    public void prepare(Processor enrichWithToken) {
         tokenFound();
 
         tokenNotFound();
@@ -75,7 +92,7 @@ public class AuthenticationAPI {
         refreshToken();
 
         builder //
-        .from(from) //
+        .from(route) //
         .routeId(AUTHENTICATE) //
         .to("log:authenticate") //
         .log(HEADERS_LOG) //
