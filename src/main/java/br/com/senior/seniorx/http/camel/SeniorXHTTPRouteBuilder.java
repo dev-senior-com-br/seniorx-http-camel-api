@@ -92,7 +92,7 @@ public class SeniorXHTTPRouteBuilder {
         PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
         String route = resolve(properties, url);
         if (route == null) {
-            return;
+            throw new SeniorXHTTPException("URL property not configured");
         }
         if (route.endsWith("/")) {
             route = route.substring(0, route.length() - 1);
