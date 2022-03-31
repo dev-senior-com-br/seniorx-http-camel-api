@@ -4,7 +4,8 @@ public enum PrimitiveType {
 
     ACTION("actions"), //
     QUERY("queries"), //
-    SIGNAL("signals");
+    SIGNAL("signals"), //
+    ENTITIES("entities"); //
 
     final String path;
 
