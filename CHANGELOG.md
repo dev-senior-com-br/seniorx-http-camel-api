@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2022-04-04
+
 ### Added
 
 ### Changed
@@ -19,11 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Entity primitive type.
+-   Entity primitive type.
 
 ## [1.0.0] - 2022-03-11
 
 ### Added
 
-- Integration consumer from Senior X events.
-- Integration for Senior X APIs.
+-   Integration consumer from Senior X events.
+-   Integration for Senior X APIs.
+
+[Unreleased]: https://github.com/dev-senior-com-br/seniorx-http-camel-api/compare/1.1.0...HEAD
+
+[1.1.0]: https://github.com/dev-senior-com-br/seniorx-http-camel-api/compare/1.1.0...1.1.0
