@@ -63,8 +63,15 @@ public class AuthenticationAPI {
     private final String route = "direct:seniorx-authentication-" + id.toString();
     private final String to = "direct:seniorx-authentication-response-" + id.toString();
 
+    private boolean ignoreExceptionOnFailure = true;
+
     public AuthenticationAPI(RouteBuilder builder) {
         this.builder = builder;
+    }
+
+    public AuthenticationAPI(RouteBuilder builder, boolean ignoreExceptionOnFailure) {
+        this.builder = builder;
+        this.ignoreExceptionOnFailure = ignoreExceptionOnFailure;
     }
 
     public String route() {
@@ -181,7 +188,8 @@ public class AuthenticationAPI {
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
-        .primitive("login");
+        .primitive("login")
+        .ignoreExceptionOnFailure(ignoreExceptionOnFailure);
 
         builder //
         .from(DIRECT_LOGIN) //
@@ -204,7 +212,8 @@ public class AuthenticationAPI {
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) //
         .primitive("loginWithKey") //
-        .anonymous(true);
+        .anonymous(true)
+        .ignoreExceptionOnFailure(ignoreExceptionOnFailure);
 
         builder //
         .from(DIRECT_LOGIN_WITH_KEY) //
@@ -226,7 +235,8 @@ public class AuthenticationAPI {
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
-        .primitive("refreshToken");
+        .primitive("refreshToken")
+        .ignoreExceptionOnFailure(ignoreExceptionOnFailure);
 
         builder //
         .from(DIRECT_REFRESH_TOKEN) //

@@ -43,7 +43,7 @@ public class SeniorXHTTPRouteBuilder {
     protected String service;
     protected PrimitiveType primitiveType;
     protected String primitive;
-    protected boolean ignoreExceptionOnFailure = false;
+    protected boolean ignoreExceptionOnFailure = true;
 
     public SeniorXHTTPRouteBuilder(RouteBuilder builder) {
         this.builder = builder;
@@ -86,6 +86,11 @@ public class SeniorXHTTPRouteBuilder {
 
     public SeniorXHTTPRouteBuilder primitive(String primitive) {
         this.primitive = primitive;
+        return this;
+    }
+
+    public SeniorXHTTPRouteBuilder ignoreExceptionOnFailure(boolean ignoreExceptionOnFailure) {
+        this.ignoreExceptionOnFailure = ignoreExceptionOnFailure;
         return this;
     }
 
