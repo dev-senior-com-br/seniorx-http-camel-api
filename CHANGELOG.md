@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0-alpha-0] - 2022-05-11
+
 ### Added
 
-- Property `ignoreExceptionOnFailure` was added in `SeniorXHTTPRouteBuilder` builder and `AuthenticationAPI` constructor.
+-   Property `ignoreExceptionOnFailure` was added in `SeniorXHTTPRouteBuilder` builder and `AuthenticationAPI` constructor.
 
 ### Changed
 
@@ -21,11 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Entity primitive type.
+-   Entity primitive type.
 
 ## [1.0.0] - 2022-03-11
 
 ### Added
 
-- Integration consumer from Senior X events.
-- Integration for Senior X APIs.
+-   Integration consumer from Senior X events.
+-   Integration for Senior X APIs.
+
+[Unreleased]: https://github.com/dev-senior-com-br/seniorx-http-camel-api/compare/1.2.0-alpha-0...HEAD
+
+[1.2.0-alpha-0]: https://github.com/dev-senior-com-br/seniorx-http-camel-api/compare/1.1.0...1.2.0-alpha-0
