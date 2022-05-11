@@ -150,6 +150,9 @@ public class AuthenticationAPI {
         .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
+        .otherwise() // Token not expired, guarantees it has Authorization header
+        .process(AuthenticationAPI::addAuthorization)
+
         .end() // Expired token
         ;
     }
