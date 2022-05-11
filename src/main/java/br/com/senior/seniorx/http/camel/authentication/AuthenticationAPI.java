@@ -271,6 +271,7 @@ public class AuthenticationAPI {
         exchange.setProperty(TOKEN_CACHE_KEY, key);
         token = TOKEN_CACHE.get(key);
         if (token != null) {
+            exchange.setProperty(TOKEN, token);
             exchange.getMessage().setBody(token);
         }
     }
