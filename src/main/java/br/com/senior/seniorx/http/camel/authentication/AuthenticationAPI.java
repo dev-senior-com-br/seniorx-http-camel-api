@@ -69,9 +69,9 @@ public class AuthenticationAPI {
         this.builder = builder;
     }
 
-    public AuthenticationAPI(RouteBuilder builder, boolean ignoreExceptionOnFailure) {
+    public AuthenticationAPI(RouteBuilder builder, boolean throwExceptionOnFailure) {
         this.builder = builder;
-        this.throwExceptionOnFailure = ignoreExceptionOnFailure;
+        this.throwExceptionOnFailure = throwExceptionOnFailure;
     }
 
     public String route() {
