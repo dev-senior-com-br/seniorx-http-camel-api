@@ -43,7 +43,7 @@ public class SeniorXHTTPRouteBuilder {
     protected String service;
     protected PrimitiveType primitiveType;
     protected String primitive;
-    protected boolean ignoreExceptionOnFailure = true;
+    protected boolean throwExceptionOnFailure = true;
 
     public SeniorXHTTPRouteBuilder(RouteBuilder builder) {
         this.builder = builder;
@@ -89,8 +89,8 @@ public class SeniorXHTTPRouteBuilder {
         return this;
     }
 
-    public SeniorXHTTPRouteBuilder ignoreExceptionOnFailure(boolean ignoreExceptionOnFailure) {
-        this.ignoreExceptionOnFailure = ignoreExceptionOnFailure;
+    public SeniorXHTTPRouteBuilder throwExceptionOnFailure(boolean throwExceptionOnFailure) {
+        this.throwExceptionOnFailure = throwExceptionOnFailure;
         return this;
     }
 
@@ -112,7 +112,7 @@ public class SeniorXHTTPRouteBuilder {
                 + '/' + primitive //
                 ;
 
-        if (!ignoreExceptionOnFailure) {
+        if (!throwExceptionOnFailure) {
             route += "?throwExceptionOnFailure=false";
         }
 

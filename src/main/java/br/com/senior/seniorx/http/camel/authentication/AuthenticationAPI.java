@@ -63,7 +63,7 @@ public class AuthenticationAPI {
     private final String route = "direct:seniorx-authentication-" + id.toString();
     private final String to = "direct:seniorx-authentication-response-" + id.toString();
 
-    private boolean ignoreExceptionOnFailure = true;
+    private boolean throwExceptionOnFailure = true;
 
     public AuthenticationAPI(RouteBuilder builder) {
         this.builder = builder;
@@ -71,7 +71,7 @@ public class AuthenticationAPI {
 
     public AuthenticationAPI(RouteBuilder builder, boolean ignoreExceptionOnFailure) {
         this.builder = builder;
-        this.ignoreExceptionOnFailure = ignoreExceptionOnFailure;
+        this.throwExceptionOnFailure = ignoreExceptionOnFailure;
     }
 
     public String route() {
@@ -192,7 +192,7 @@ public class AuthenticationAPI {
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
         .primitive("login")
-        .ignoreExceptionOnFailure(ignoreExceptionOnFailure);
+        .throwExceptionOnFailure(throwExceptionOnFailure);
 
         builder //
         .from(DIRECT_LOGIN) //
@@ -216,7 +216,7 @@ public class AuthenticationAPI {
         .primitiveType(ACTION) //
         .primitive("loginWithKey") //
         .anonymous(true)
-        .ignoreExceptionOnFailure(ignoreExceptionOnFailure);
+        .throwExceptionOnFailure(throwExceptionOnFailure);
 
         builder //
         .from(DIRECT_LOGIN_WITH_KEY) //
@@ -239,7 +239,7 @@ public class AuthenticationAPI {
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
         .primitive("refreshToken")
-        .ignoreExceptionOnFailure(ignoreExceptionOnFailure);
+        .throwExceptionOnFailure(throwExceptionOnFailure);
 
         builder //
         .from(DIRECT_REFRESH_TOKEN) //

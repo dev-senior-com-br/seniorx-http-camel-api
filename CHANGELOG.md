@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Property `ignoreExceptionOnFailure` was added in `SeniorXHTTPRouteBuilder` builder and `AuthenticationAPI` constructor.
+- Property `throwExceptionOnFailure` was added in `SeniorXHTTPRouteBuilder` builder and `AuthenticationAPI` constructor. Default value: `true`.
+  *  By default, Camel throws `HttpOperationFailedException` for failed response codes. If set to `false`, allows you to get any response from the remote server.
 
 ### Changed
 
