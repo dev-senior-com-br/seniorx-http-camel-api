@@ -7,7 +7,7 @@ public enum PrimitiveType {
     SIGNAL("signals"), //
     ENTITY("entities"); //
 
-    final String path;
+    public final String path;
 
     PrimitiveType(String path) {
         this.path = path;

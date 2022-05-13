@@ -63,8 +63,15 @@ public class AuthenticationAPI {
     private final String route = "direct:seniorx-authentication-" + id.toString();
     private final String to = "direct:seniorx-authentication-response-" + id.toString();
 
+    private boolean throwExceptionOnFailure = true;
+
     public AuthenticationAPI(RouteBuilder builder) {
         this.builder = builder;
+    }
+
+    public AuthenticationAPI(RouteBuilder builder, boolean throwExceptionOnFailure) {
+        this.builder = builder;
+        this.throwExceptionOnFailure = throwExceptionOnFailure;
     }
 
     public String route() {
@@ -143,6 +150,9 @@ public class AuthenticationAPI {
         .unmarshal(LoginOutput.LOGIN_OUTPUT_FORMAT) //
         .process(this::unmarshallToken) //
 
+        .otherwise() // Token not expired, guarantees it has Authorization header
+        .process(AuthenticationAPI::addAuthorization)
+
         .end() // Expired token
         ;
     }
@@ -181,7 +191,8 @@ public class AuthenticationAPI {
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
-        .primitive("login");
+        .primitive("login")
+        .throwExceptionOnFailure(throwExceptionOnFailure);
 
         builder //
         .from(DIRECT_LOGIN) //
@@ -204,7 +215,8 @@ public class AuthenticationAPI {
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) //
         .primitive("loginWithKey") //
-        .anonymous(true);
+        .anonymous(true)
+        .throwExceptionOnFailure(throwExceptionOnFailure);
 
         builder //
         .from(DIRECT_LOGIN_WITH_KEY) //
@@ -226,7 +238,8 @@ public class AuthenticationAPI {
         .domain(PLATFORM) //
         .service(AUTHENTICATION) //
         .primitiveType(ACTION) // .
-        .primitive("refreshToken");
+        .primitive("refreshToken")
+        .throwExceptionOnFailure(throwExceptionOnFailure);
 
         builder //
         .from(DIRECT_REFRESH_TOKEN) //
@@ -258,6 +271,7 @@ public class AuthenticationAPI {
         exchange.setProperty(TOKEN_CACHE_KEY, key);
         token = TOKEN_CACHE.get(key);
         if (token != null) {
+            exchange.setProperty(TOKEN, token);
             exchange.getMessage().setBody(token);
         }
     }

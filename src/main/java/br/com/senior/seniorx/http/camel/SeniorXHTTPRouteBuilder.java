@@ -43,6 +43,7 @@ public class SeniorXHTTPRouteBuilder {
     protected String service;
     protected PrimitiveType primitiveType;
     protected String primitive;
+    protected boolean throwExceptionOnFailure = true;
 
     public SeniorXHTTPRouteBuilder(RouteBuilder builder) {
         this.builder = builder;
@@ -88,6 +89,11 @@ public class SeniorXHTTPRouteBuilder {
         return this;
     }
 
+    public SeniorXHTTPRouteBuilder throwExceptionOnFailure(boolean throwExceptionOnFailure) {
+        this.throwExceptionOnFailure = throwExceptionOnFailure;
+        return this;
+    }
+
     public void route(Exchange exchange) {
         PropertiesComponent properties = exchange.getContext().getPropertiesComponent();
         String route = resolve(properties, url);
@@ -105,6 +111,10 @@ public class SeniorXHTTPRouteBuilder {
                 + '/' + primitiveType.path //
                 + '/' + primitive //
                 ;
+
+        if (!throwExceptionOnFailure) {
+            route += "?throwExceptionOnFailure=false";
+        }
 
         Message message = exchange.getMessage();
         message.setHeader("Content-Type", "application/json");
