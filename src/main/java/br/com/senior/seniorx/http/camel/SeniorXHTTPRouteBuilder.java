@@ -43,6 +43,7 @@ public class SeniorXHTTPRouteBuilder {
     protected String service;
     protected PrimitiveType primitiveType;
     protected String primitive;
+    protected String entityId;
     protected boolean throwExceptionOnFailure = true;
 
     public SeniorXHTTPRouteBuilder(RouteBuilder builder) {
@@ -89,6 +90,11 @@ public class SeniorXHTTPRouteBuilder {
         return this;
     }
 
+    public SeniorXHTTPRouteBuilder entityId(String entityId) {
+        this.entityId = entityId;
+        return this;
+    }
+
     public SeniorXHTTPRouteBuilder throwExceptionOnFailure(boolean throwExceptionOnFailure) {
         this.throwExceptionOnFailure = throwExceptionOnFailure;
         return this;
@@ -111,6 +117,10 @@ public class SeniorXHTTPRouteBuilder {
                 + '/' + primitiveType.path //
                 + '/' + primitive //
                 ;
+
+        if (entityId != null && primitiveType.path.equals("entities")) {
+            route += "/" + entityId;
+        }
 
         if (!throwExceptionOnFailure) {
             route += "?throwExceptionOnFailure=false";

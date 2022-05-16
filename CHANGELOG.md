@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Property `entityId` added in `SeniorXHTTPRouteBuilder`. If not null and `primitiveType` is `entities`, it will be concatenated at the end of the path.
+
 ### Changed
 
 ### Fixed
