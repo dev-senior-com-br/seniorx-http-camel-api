@@ -118,7 +118,7 @@ public class SeniorXHTTPRouteBuilder {
                 + '/' + primitive //
                 ;
 
-        if (entityId != null && primitiveType.path.equals("entities")) {
+        if (entityId != null && primitiveType == PrimitiveType.ENTITY) {
             route += "/" + entityId;
         }
 
